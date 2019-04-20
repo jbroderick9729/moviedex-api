@@ -7,13 +7,12 @@ const MOVIEDEX = require('./movie-data-small.json')
 
 
 const app = express();
-app.use(morgan('dev'));
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common'
 app.use(cors());
+app.use(morgan(morganSetting));
 
 function validateBearerToken(req, res, next){
     
-    console.log(process.env.API_TOKEN)
-    debugger
     const apiToken = process.env.API_TOKEN
     const authToken = req.get('Authorization')
 
@@ -47,8 +46,20 @@ function handleGenreCountryVote(req, res) {
 
 app.get('/movie', handleGenreCountryVote)
 
-const PORT = 8000;
+app.use((error, req, res, next) => {
+    let response
+    if (process.env.NODE_ENV === 'production') {
+      response = { error: { message: 'server error' }}
+    } else {
+      response = { error }
+    }
+    res.status(500).json(response)
+  })
+
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
     console.log(`Server listening at http://localhost:${PORT}`)
 })
+
+//62cef818-6750-4bef-9a4d-2e22bd048b8c
